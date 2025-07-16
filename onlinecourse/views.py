@@ -138,7 +138,25 @@ def extract_answers(request):
         # Get the selected choice ids from the submission record
         # For each selected choice, check if it is a correct answer or not
         # Calculate the total score
-#def show_exam_result(request, course_id, submission_id):
-
-
-
+def show_exam_result(request, course_id, submission_id):
+    # Getting course and submission objects
+    course = get_object_or_404(Course, pk=course_id)
+    submission = get_object_or_404(Submission, pk=submission_id)
+    # Getting selected choices by user
+    choices = submission.choices.all()
+    # Calculating total score
+    total_score = 0
+    questions = course.question_set.all()
+    for question in questions:
+        correct_choices = question.choice_set.filter(is_correct=True)
+        selected_choices = choices.filter(question=question)
+        # Checking if selected choices and correct choices match
+        if set(correct_choices) == set(selected_choices):
+            total_score += question.score
+    # Passing course, score, and choices as context to template
+    context = {
+        'course': course,
+        'score': total_score,
+        'choices': choices,
+    }
+    return render(request, 'onlinecourse/exam_result_bootstrap.html', context)
